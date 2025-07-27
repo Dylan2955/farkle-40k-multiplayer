@@ -49,8 +49,6 @@ io.on('connection', (socket) => {
 });
   
   // We will add all our game logic here later!
-});
-
 server.listen(PORT, () => {
   console.log(`Server is listening on port ${PORT}`);
 });
