@@ -4,6 +4,14 @@ socket.on('connect', () => {
     console.log('Connected to server! My socket ID is', socket.id);
 });
 
+socket.on('gameStateUpdate', (gameState) => {
+    // We will fill this in later. For now, let's just log it.
+    console.log("Received a game state update from the server:", gameState);
+    
+    // This is where we will eventually call renderDice(), updateScores(), etc.
+    // based on the data we get from the server.
+});
+
 document.addEventListener('DOMContentLoaded', () => {
     // --- Game Constants ---
     const WINNING_SCORE = 10000;
@@ -252,11 +260,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function startGame() {
-        gameState = 'PlayerTurn';
-        addToLog("The battle for glory begins!");
-        updateActivePlayerUI();
-        handleRoll();
+        socket.emit('startGame'); // Just tell the server we want to start
     }
+
     
     function resetDiceState(fullReset = true) {
         if (fullReset) {
