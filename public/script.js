@@ -4,12 +4,27 @@ socket.on('connect', () => {
     console.log('Connected to server! My socket ID is', socket.id);
 });
 
-socket.on('gameStateUpdate', (gameState) => {
-    // We will fill this in later. For now, let's just log it.
-    console.log("Received a game state update from the server:", gameState);
-    
-    // This is where we will eventually call renderDice(), updateScores(), etc.
-    // based on the data we get from the server.
+socket.on('gameStateUpdate', (serverState) => {
+    console.log("Received a game state update from the server:", serverState);
+
+    // Update the client's local variables to match the server's authoritative state
+    players = serverState.players;
+    dice = serverState.dice;
+    currentPlayerIndex = serverState.currentPlayerIndex;
+    turnScore = serverState.turnScore;
+    gameState = serverState.status; // Note: 'gameState' on client, 'status' on server object
+
+    // Update the game log
+    dom.gameLog.innerHTML = ''; // Clear the old log
+    serverState.log.forEach(entry => {
+        // We'll create a simplified log entry for now
+        const li = document.createElement('li');
+        li.textContent = entry;
+        dom.gameLog.prepend(li);
+    });
+
+    // Now that all local variables are synced, redraw the entire UI
+    updateAllUI();
 });
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -244,20 +259,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Game Flow Functions ---
     
-    function initializeGame() {
-        players = [
-            { id: 0, name: 'Player Commander', score: 0, isOnBoard: false },
-            { id: 1, name: 'AI Heretek', score: 0, isOnBoard: false },
-        ];
-        currentPlayerIndex = 0;
-        turnScore = 0;
-        gameState = 'NotStarted';
-        dom.gameLog.innerHTML = '';
-        resetDiceState();
-        updateAllUI();
-        addToLog("A new crusade for glory awaits.");
-        dom.gameOverScreen.style.display = 'none';
-    }
+function initializeGame() {
+    // This function no longer creates the game state, it just resets the UI
+    // The server is now the source of truth for the actual game state.
+    players = [];
+    dice = Array.from({ length: DICE_COUNT }, (_, i) => ({ id: i, value: 1, isSelected: false, isLocked: false, isScoring: false }));
+    turnScore = 0;
+    gameState = 'NotStarted';
+    dom.gameLog.innerHTML = '';
+    
+    updateAllUI(); // Update the UI to show the cleared state
+    addToLog("A new crusade for glory awaits.");
+    dom.gameOverScreen.style.display = 'none';
+}
 
     function startGame() {
         socket.emit('startGame'); // Just tell the server we want to start
